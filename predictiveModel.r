@@ -1,7 +1,8 @@
 # Importo la libreria ggplot2
 library(ggplot2)
+library(dplyr)
 
-file.choose()
+# file.choose()
 # Asignacion de los datos en una variable, TRUE por que la primer linea son los titulos y "," porque se separan por ,
 DB <- read.csv("/home/valen/itec/matematica/EFI_matematica_2/elbueno.csv", TRUE, ";")
 DB <- read.csv("/home/valen/itec/matematica/EFI_matematica_2/elbueno.csv", TRUE, ";")
@@ -40,6 +41,8 @@ datos <- data.frame(fechasdf = fechasv, preciosdf = preciosv)
 
 datos <- aggregate(preciosdf ~ fechasdf, data = datos, FUN = mean)
 
+datosrbind <- datos
+
 # Hago el grafico de regresion lineal con los datos actuales
 ggplot(data=datos, aes(x=fechasdf, y=preciosdf)) +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
@@ -63,26 +66,26 @@ print(cor.test(datos$preciosdf, fechas_numeric))
 cat("La prediccion en base a los datos actuales")
 
 # Ajusto un modelo de regresion lineal en base a los datos
-model <- lm(datos$preciosdf ~ datos$fechasdf, data = datos)
+model <- lm((preciosdf = datos$preciosdf) ~ (fechasdf = datos$fechasdf), data = datos)
 summary(model)
 
 # Ultimo registro
-max_fecha <- max(datos$fechasdf)
+max_fecha <- max(datos$fechasdf) 
 
 # Creo un data frame con 10 registros posteriores a el ultimo
-dfDiasFuturos <- data.frame(fechasfuturo = seq(max_fecha + 1, by = "day", length.out = 10))
+dfDiasFuturos <- data.frame(fechasfuturo = seq((max_fecha+1) + 1, by = "day", length.out = 31))
 
-typeof(datos$fechasdf)
+# typeof(datos$fechasdf[1])
 # > typeof(datos$fechasdf)
 # [1] "double"
 
-typeof(dfDiasFuturos$fechasfuturo)
+# 
+# typeof(dfDiasFuturos$fechasfuturo)
 # > typeof(dfDiasFuturos$fechasfuturo)
 # [1] "double"
 
-predicciones <- predict(model, newdata = data.frame(fechasdf = dfDiasFuturos$fechasfuturo))
+predicciones <- predict(model, newdata = (datos$fechasdf = dfDiasFuturos$fechasfuturo))
 predicciones
-# > predicciones
 # 1        2        3        4        5        6        7        8        9       10       11       12       13       14 
 # 220331.9 223124.4 225916.8 228709.3 231501.8 234294.3 237086.8 239879.2 242671.7 245464.2 248256.7 251049.1 253841.6 256634.1 
 # 15       16       17       18       19       20       21       22       23       24       25       26       27       28 
@@ -92,16 +95,16 @@ predicciones
 
 
 # Creo un data frame con las fechas futuras y los precios predecidos 
-predicciondf <- data.frame(preciosdf = predicciones, fechasdf = dfDiasFuturos$fechasfuturo)
+predicciondf <- data.frame(fechasdf = dfDiasFuturos$fechasfuturo, preciosdf = predicciones)
 # > dfPredicciones <- data.frame(Price = predicciones, DateDB = dfDiasFuturos$DateDB)
 # Error in data.frame(Price = predicciones, DateDB = dfDiasFuturos$DateDB) : 
 #   arguments imply differing number of rows: 31, 0
 
 # Concatenacion del data frame original mas las predicciones
-predicciondf <- rbind(data, predicciondf)
+copiapredicciondf <- rbind(datosrbind, predicciondf)
 
 # Grafico con las predicciones
-ggplot(data=predicciondf, aes(x=fechasdf, y=preciosdf)) +
+ggplot(data=copiapredicciondf, aes(x=fechasdf, y=preciosdf)) +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   geom_point(size = 1) + 
   labs(title = "Prediccion de precios",
